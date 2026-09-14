@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
+import { getCorsHeaders } from "../../../../lib/cors";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "http://localhost:5173",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Credentials": "true",
-};
+const corsHeaders = getCorsHeaders();
 
 export async function OPTIONS() {
   return new Response(null, {
@@ -25,10 +21,10 @@ export async function POST() {
     }
   );
 
-  response.cookies.set("auth_token", "", {
+    response.cookies.set("auth_token", "", {
     httpOnly: true,
-    sameSite: "lax",
-    secure: false,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 0,
   });

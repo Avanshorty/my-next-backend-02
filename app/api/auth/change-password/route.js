@@ -3,13 +3,9 @@ import { ObjectId } from "mongodb";
 import { NextResponse } from "next/server";
 import clientPromise from "../../../../lib/mongodb";
 import { getUserFromRequest } from "../../../../lib/auth";
+import { getCorsHeaders } from "../../../../lib/cors";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "http://localhost:5173",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Credentials": "true",
-};
+const corsHeaders = getCorsHeaders();
 
 export async function OPTIONS() {
   return new Response(null, {

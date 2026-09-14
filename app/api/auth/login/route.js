@@ -2,13 +2,9 @@ import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import clientPromise from "../../../../lib/mongodb";
 import { createToken } from "../../../../lib/auth";
+import { getCorsHeaders } from "../../../../lib/cors";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "http://localhost:5173",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Credentials": "true",
-};
+const corsHeaders = getCorsHeaders();
 
 export async function OPTIONS() {
   return new Response(null, {
@@ -74,12 +70,12 @@ export async function POST(request) {
     );
 
     response.cookies.set("auth_token", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60,
-    });
+  httpOnly: true,
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+  maxAge: 60 * 60,
+});
 
     return response;
   } catch (error) {
