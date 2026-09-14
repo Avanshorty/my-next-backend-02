@@ -1,4 +1,7 @@
+import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
+import clientPromise from "../../../../lib/mongodb";
+import { createToken } from "../../../../lib/auth";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "http://localhost:5173",
@@ -18,8 +21,13 @@ export async function POST(request) {
   try {
     const { username, password } = await request.json();
 
-    // Simple login account for this assignment
-    if (username !== "admin" || password !== "1234") {
+    const client = await clientPromise;
+    const db = client.db("nextjs_database");
+    const users = db.collection("users");
+
+    const user = await users.findOne({ username });
+
+    if (!user) {
       return NextResponse.json(
         {
           message: "Invalid username or password",
@@ -31,11 +39,32 @@ export async function POST(request) {
       );
     }
 
+    const passwordCorrect = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!passwordCorrect) {
+      return NextResponse.json(
+        {
+          message: "Invalid username or password",
+        },
+        {
+          status: 401,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    const token = createToken(user);
+
     const response = NextResponse.json(
       {
         message: "Login successful",
         user: {
-          username: username,
+          username: user.username,
+          role: user.role,
+          mustChangePassword: user.mustChangePassword,
         },
       },
       {
@@ -44,10 +73,10 @@ export async function POST(request) {
       }
     );
 
-    response.cookies.set("auth_token", "admin_logged_in", {
+    response.cookies.set("auth_token", token, {
       httpOnly: true,
       sameSite: "lax",
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
       path: "/",
       maxAge: 60 * 60,
     });
